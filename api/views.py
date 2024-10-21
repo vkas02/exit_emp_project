@@ -156,6 +156,7 @@ def group_tasks_by_employee(tasks):
 
 @csrf_exempt
 @permission_classes([IsHR])
+@api_view(['GET','POST'])
 def handle_hr_role(request):
     sort_by,sort_direction,show_incomplete,search_query=get_hr_query_params(request)
 
@@ -272,6 +273,7 @@ def get_hr_query_params(request):
     show_incomplete = request.GET.get('incomplete', 'false') == 'true'
     search_query = request.GET.get('search', '')
     return sort_by, sort_direction, show_incomplete, search_query
+
 
 @csrf_exempt
 @permission_classes([IsHR])
