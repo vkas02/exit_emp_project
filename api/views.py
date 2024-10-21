@@ -276,6 +276,7 @@ def get_hr_query_params(request):
 
 
 @csrf_exempt
+@api_view(['GET'])
 @permission_classes([IsHR])
 def sort_employees(employees, sort_by, sort_direction):
     valid_sorts = ['progress']
