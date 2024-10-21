@@ -158,22 +158,12 @@ def group_tasks_by_employee(tasks):
 @permission_classes([IsHR])
 @api_view(['GET','POST'])
 def handle_hr_role(request):
-    sort_by,sort_direction,show_incomplete,search_query=get_hr_query_params(request)
-
-    if request.method=='POST':
-        response=handle_upload_data(request)
-
-        if response['status'] == 'error':
-            return Response({'error': response['message']}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'message': response['message']}, status=status.HTTP_200_OK)
-
+    sort_by, sort_direction, show_incomplete, search_query = get_hr_query_params(request)
 
     employees = Employee.objects.all().annotate(
-        total_tasks=Count('tasks'),
-        approved_tasks=Count(Case(When(tasks__status='approved', then=1))),
-    ).annotate(
-        progress=F('approved_tasks') * 100.0 / F('total_tasks')
+        total_tasks=Count('employeetask'),
+        approved_tasks=Count(Case(When(employeetask__status='approved', then=1))),
+        progress=Count(Case(When(employeetask__status='approved', then=1))) * 100.0 / Count('employeetask'),
     )
 
     if show_incomplete:
