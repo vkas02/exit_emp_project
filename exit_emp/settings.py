@@ -68,6 +68,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+
 ]
 
 ROOT_URLCONF = 'exit_emp.urls'
@@ -164,5 +165,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CORS_ALLOW_ALL_ORIGIN=True
-CORS_ALLOW_ALL_CREDENTIALS=True
+CORS_ALLOW_ALL_ORIGINS =True
+CORS_ALLOW_CREDENTIALS =True
