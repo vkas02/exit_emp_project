@@ -11,7 +11,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Employee, EmployeeTask, FeedbackQuestions, FeedbackAnswers, Department
-from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer
+from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer, TaskSerializer
 from .utlis import notify_hr_of_completion
 from rest_framework.decorators import permission_classes, api_view
 from django.db.models import Q, Count, Case, When, F
@@ -91,7 +91,10 @@ def handle_feedback_submission(request, employee):
 
 @permission_classes([IsEmployee])
 def get_employee_response(tasks):
-    tasks_data = EmployeeTaskSerializer(tasks, many=True).data
+    if tasks.exists():
+        tasks_data = EmployeeTaskSerializer(tasks, many=True).data
+    else:
+        tasks_data=[]
     feedback_questions = FeedbackQuestions.objects.all()
     feedback_questions_data = FeedbackQuestionsSerializer(feedback_questions, many=True).data
     response_data = {
@@ -161,9 +164,9 @@ def handle_hr_role(request):
     sort_by, sort_direction, show_incomplete, search_query = get_hr_query_params(request)
 
     employees = Employee.objects.all().annotate(
-        total_tasks=Count('employeetask'),
+        total_tasks=Count('employee_task'),
         approved_tasks=Count(Case(When(employeetask__status='approved', then=1))),
-        progress=Count(Case(When(employeetask__status='approved', then=1))) * 100.0 / Count('employeetask'),
+        progress=Count(Case(When(employeetask__status='approved', then=1))) * 100.0 / Count('employee_task'),
     )
 
     if show_incomplete:
