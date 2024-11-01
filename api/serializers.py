@@ -25,10 +25,9 @@ class EmployeeTaskSerializer(serializers.ModelSerializer):
     task_name=serializers.CharField(source='task.name',read_only=True)
     department_name=serializers.CharField(source='task.departments.name',read_only=True)
     department_hod=serializers.SerializerMethodField()
-    employee_name=serializers.CharField(source='employee.name',read_only=True)
     class Meta:
         model=EmployeeTask
-        fields = ['id','employee_name','status','task_name',]
+        fields = ['id','status','task_name','department_name','department_hod']
 
     def get_department_hod(self, obj):
         if obj.task.departments.hod:
