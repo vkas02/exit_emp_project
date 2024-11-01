@@ -92,7 +92,7 @@ def handle_feedback_submission(request, employee):
 @permission_classes([IsEmployee])
 def get_employee_response(tasks):
     if tasks.exists():
-        tasks_data = EmployeeTaskSerializerN(tasks, many=True).data
+        tasks_data = EmployeeTaskSerializer(tasks, many=True).data
     else:
         tasks_data=[]
     feedback_questions = FeedbackQuestions.objects.all()
