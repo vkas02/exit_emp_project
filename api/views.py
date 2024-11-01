@@ -11,7 +11,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Employee, EmployeeTask, FeedbackQuestions, FeedbackAnswers, Department
-from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer, TaskSerializer
+from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer, TaskSerializer,EmployeeTaskSerializerN
 from .utlis import notify_hr_of_completion
 from rest_framework.decorators import permission_classes, api_view
 from django.db.models import Q, Count, Case, When, F
@@ -62,7 +62,7 @@ def handle_employee_role(request, user):
     try:
         employee = Employee.objects.get(user=user)
         tasks = EmployeeTask.objects.filter(employee=employee)
-        all_task_completed = not EmployeeTask.objects.filter(employee=employee, status='rejected').exists()
+        all_task_completed = not EmployeeTask.objects.filter(employee=employee, status='pending').exists()
         if all_task_completed:
             notify_hr_of_completion(employee)
 
@@ -92,7 +92,7 @@ def handle_feedback_submission(request, employee):
 @permission_classes([IsEmployee])
 def get_employee_response(tasks):
     if tasks.exists():
-        tasks_data = EmployeeTaskSerializer(tasks, many=True).data
+        tasks_data = EmployeeTaskSerializerN(tasks, many=True).data
     else:
         tasks_data=[]
     feedback_questions = FeedbackQuestions.objects.all()
