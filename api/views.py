@@ -6,7 +6,6 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
-from  rest_framework import  generics
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework import status
@@ -42,7 +41,6 @@ def logout_user(request):
     return redirect('login')
 
 
-
 @csrf_exempt
 @api_view(['GET'])
 def dashboard(request):
@@ -52,6 +50,7 @@ def dashboard(request):
     if role == 'Employee':
         return handle_employee_role(request, user)
     elif role == 'HR':
+        print('hr role verified')
         return handle_hr_role(request)
     elif role == 'HoD':
         return handle_hod_role(request, user)
@@ -91,6 +90,7 @@ def handle_feedback_submission(request, employee):
 
 @permission_classes([IsEmployee])
 def get_employee_response(tasks):
+
     if tasks.exists():
         tasks_data = EmployeeTaskSerializerN(tasks, many=True).data
     else:

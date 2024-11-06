@@ -1,8 +1,20 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import Employee,EmployeeTask,Department,FeedbackQuestions,FeedbackAnswers,Task
-from django.contrib.auth.models import User
 
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+
+        data = super().validate(attrs)
+
+        user = self.user
+        role = user.employee.role if hasattr(user, 'employee') else None
+
+        data['role'] = role
+
+        return data
 
 class EmployeeSerializer(serializers.ModelSerializer):
     total_tasks = serializers.IntegerField()
