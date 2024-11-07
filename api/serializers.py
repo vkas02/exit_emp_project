@@ -17,13 +17,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 class EmployeeSerializer(serializers.ModelSerializer):
-    total_tasks = serializers.IntegerField()
-    approved_tasks = serializers.IntegerField()
-    progress = serializers.FloatField()
+    total_tasks = serializers.IntegerField(read_only=True)
+    approved_tasks = serializers.IntegerField(read_only=True)
+    progress = serializers.FloatField(read_only=True)
+    name = serializers.CharField(source='user.username', read_only=True,allow_null=True)
+
     class Meta:
-        model= Employee
-        exclude = ['user']
-        depth = 1
+        model = Employee
+        fields = ['id', 'name', 'total_tasks', 'approved_tasks', 'progress']
+
 
 
 class TaskSerializer(serializers.ModelSerializer):

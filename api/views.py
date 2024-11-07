@@ -2,6 +2,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models.functions import Cast, Coalesce, NullIf
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 import pandas as pd
@@ -13,7 +14,7 @@ from .models import Employee, EmployeeTask, FeedbackQuestions, FeedbackAnswers, 
 from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer, TaskSerializer,EmployeeTaskSerializerN
 from .utlis import notify_hr_of_completion
 from rest_framework.decorators import permission_classes, api_view
-from django.db.models import Q, Count, Case, When, F
+from django.db.models import Q, Count, Case, When, F, FloatField, Value
 
 
 # Create your views here.
@@ -159,24 +160,47 @@ def group_tasks_by_employee(tasks):
 
 @csrf_exempt
 @permission_classes([IsHR])
-@api_view(['GET','POST'])
 def handle_hr_role(request):
-    sort_by, sort_direction, show_incomplete, search_query = get_hr_query_params(request)
+    sort_by = request.GET.get('sort', 'name')
+    sort_direction = request.GET.get('direction', 'desc')
+    show_incomplete = request.GET.get('incomplete', 'false') == 'true'
+    search_query = request.GET.get('search', '')
+
+    valid_sorts = ['progress']
+    valid_directions = ['asc', 'desc']
+    if sort_by not in valid_sorts:
+        sort_by = 'name'
+
+    if sort_direction not in valid_directions:
+        sort_direction = 'desc'
 
     employees = Employee.objects.all().annotate(
-        total_tasks=Count('employee_task'),
-        approved_tasks=Count(Case(When(employeetask__status='approved', then=1))),
-        progress=Count(Case(When(employeetask__status='approved', then=1))) * 100.0 / Count('employee_task'),
-    )
-
+            total_tasks=Count('tasks'),
+            approved_tasks=Count(Case(When(tasks__status='approved', then=1))),
+            progress=Cast(
+                Coalesce(
+                    Count(Case(When(tasks__status='approved', then=1))) * 100.0 / NullIf(Count('tasks'), 0),
+                    Value(0)
+                ),
+                FloatField()
+            ),
+        )
     if show_incomplete:
         employees = employees.filter(progress__lt=100)
+
     if search_query:
-        employees = employees.filter(Q(name__icontains=search_query) | Q(user__username__icontains=search_query))
+        employees = employees.filter(
+            Q(name__icontains=search_query) | Q(user__username__icontains=search_query)
+        )
+    if sort_by == 'progress':
+        if sort_direction == 'asc':
+            employees = employees.order_by('progress')
+        else:
+            employees = employees.order_by('-progress')
+    else:
+        employees = employees.order_by('name')
 
-    employees = sort_employees(employees, sort_by, sort_direction)
     employees_data = EmployeeSerializer(employees, many=True).data
-
     return Response({
         'employees': employees_data,
         'sort_by': sort_by,
@@ -184,8 +208,8 @@ def handle_hr_role(request):
         'show_incomplete': show_incomplete,
     }, status=status.HTTP_200_OK)
 
+
 @csrf_exempt
-@api_view(['POST'])
 @permission_classes([IsHR])
 def handle_upload_data(request):
     try:
@@ -258,30 +282,4 @@ def handle_upload_data(request):
     }
     return Response(response_data, status=status.HTTP_200_OK if success_count > 0 else status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
-@permission_classes([IsHR])
-def get_hr_query_params(request):
-    sort_by = request.GET.get('sort', 'name')
-    sort_direction = request.GET.get('direction', 'desc')
-    show_incomplete = request.GET.get('incomplete', 'false') == 'true'
-    search_query = request.GET.get('search', '')
-    return sort_by, sort_direction, show_incomplete, search_query
 
-
-@csrf_exempt
-@api_view(['GET'])
-@permission_classes([IsHR])
-def sort_employees(employees, sort_by, sort_direction):
-    valid_sorts = ['progress']
-    valid_directions = ['asc', 'desc']
-
-    if sort_by not in valid_sorts:
-        sort_by = 'name'
-    if sort_direction not in valid_directions:
-        sort_direction = 'desc'
-
-    if sort_by == 'progress':
-        employees = employees.order_by('progress') if sort_direction == 'asc' else employees.order_by('-progress')
-    else:
-        employees = employees.order_by('name')
-    return employees
