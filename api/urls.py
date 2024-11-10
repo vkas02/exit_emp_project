@@ -17,5 +17,6 @@ urlpatterns = [
     path('employee/submit_feedback/', views.handle_feedback_submission, name='submit_feedback'),
     path('hod/update_task/', views.update_task_status, name='update_task_status'),
     path('hr/upload_excel/', views.handle_upload_data, name='upload_excel'),
+    path('hr/<int:employee_id>',views.employee_tasklist_view,name='employee_tasklist_view')
 
 ]

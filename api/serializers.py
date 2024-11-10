@@ -18,13 +18,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     total_tasks = serializers.IntegerField(read_only=True)
-    approved_tasks = serializers.IntegerField(read_only=True)
     progress = serializers.FloatField(read_only=True)
     name = serializers.CharField(source='user.username', read_only=True,allow_null=True)
+    department_name=serializers.CharField(source='department.name')
 
     class Meta:
         model = Employee
-        fields = ['id', 'name', 'total_tasks', 'approved_tasks', 'progress']
+        fields = ['id', 'name', 'total_tasks', 'progress','role','department_name']
 
 
 
@@ -59,8 +59,9 @@ class EmployeeTaskSerializerN(serializers.ModelSerializer):
         fields = ['id','status','task_name','department_name','department_hod']
 
     def get_department_hod(self, obj):
-        if obj.task.departments.hod:
-            return f"{obj.task.departments.hod.first_name} {obj.task.departments.hod.last_name}"
+        department = getattr(obj.task, 'departments', None)
+        if department and department.hod:
+            return f"{department.hod.first_name} {department.hod.last_name}"
         return "No HoD assigned"
 
 

@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework import status
@@ -282,4 +283,25 @@ def handle_upload_data(request):
     }
     return Response(response_data, status=status.HTTP_200_OK if success_count > 0 else status.HTTP_400_BAD_REQUEST)
 
+
+@permission_classes([IsHR])
+@api_view(['GET'])
+def employee_tasklist_view(request,employee_id):
+
+    employee = get_object_or_404(Employee, id=employee_id)
+    tasks = EmployeeTask.objects.filter(employee=employee)
+    if tasks.exists():
+        tasks_data = EmployeeTaskSerializerN(tasks, many=True).data
+    else:
+        tasks_data = []
+    response_data = {
+        'employee': {
+            'id': employee.id,
+            'name': employee.name,
+            'department': employee.department.name,
+        },
+        'tasks': tasks_data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
