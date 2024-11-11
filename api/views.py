@@ -72,9 +72,9 @@ def handle_employee_role(request, user):
         all_task_completed = not EmployeeTask.objects.filter(employee=employee, status='pending').exists()
         if all_task_completed:
             notify_hr_of_completion(employee)
-
-        if request.method == 'POST':
-            return handle_feedback_submission(request)
+        #
+        # if request.method == 'POST':
+        #     return handle_feedback_submission(request)
 
         return get_employee_response(tasks)
     except Employee.DoesNotExist:
