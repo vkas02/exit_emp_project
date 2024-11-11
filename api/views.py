@@ -8,11 +8,12 @@ from django.shortcuts import render, redirect
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Employee, EmployeeTask, FeedbackQuestions, FeedbackAnswers, Department
-from .serializers import EmployeeSerializer,FeedbackQuestionsSerializer,EmployeeTaskSerializer, TaskSerializer,EmployeeTaskSerializerN
+from .serializers import EmployeeSerializer, FeedbackQuestionsSerializer, EmployeeTaskSerializer, TaskSerializer, \
+    EmployeeTaskSerializerN, FeedbackAnswersSerializer, getCurrUserInfoSerializer
 from .utlis import notify_hr_of_completion
 from rest_framework.decorators import permission_classes, api_view
 from django.db.models import Q, Count, Case, When, F, FloatField, Value
@@ -21,6 +22,9 @@ from django.db.models import Q, Count, Case, When, F, FloatField, Value
 # Create your views here.
 def index(request):
     return HttpResponse('Index page')
+
+
+
 
 
 class IsEmployee(BasePermission):
@@ -41,6 +45,8 @@ class IsHoD(BasePermission):
 def logout_user(request):
     logout(request)
     return redirect('login')
+
+
 
 
 @csrf_exempt
@@ -68,7 +74,7 @@ def handle_employee_role(request, user):
             notify_hr_of_completion(employee)
 
         if request.method == 'POST':
-            return handle_feedback_submission(request, employee)
+            return handle_feedback_submission(request)
 
         return get_employee_response(tasks)
     except Employee.DoesNotExist:
@@ -78,17 +84,12 @@ def handle_employee_role(request, user):
 @csrf_exempt
 @api_view(['GET','POST'])
 @permission_classes([IsEmployee])
-def handle_feedback_submission(request, employee):
-    feedback_questions = FeedbackQuestions.objects.all()
-    for question in feedback_questions:
-        selected_choice = request.data.get(f'question_{question.id}')
-        if selected_choice:
-            FeedbackAnswers.objects.update_or_create(
-                employee=employee,
-                question=question,
-                defaults={'selected_choice': selected_choice}
-            )
-    return Response({'message': 'Feedback submitted successfully.'}, status=status.HTTP_200_OK)
+def handle_feedback_submission(request):
+    serializer=FeedbackAnswersSerializer(data=request.data,many=True)
+    if serializer.is_valid():
+        serializer.save();
+        return Response({'messge':"Feedback submitted successfully"},status=status.HTTP_200_OK)
+    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([IsEmployee])
 def get_employee_response(tasks):
@@ -104,6 +105,23 @@ def get_employee_response(tasks):
         'feedback_questions': feedback_questions_data
     }
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def get_curr_user(request):
+    user=request.user
+    employee=Employee.objects.get(user=user)
+    print(f'{employee}')
+    user=request.user
+    user_data=[]
+    try:
+        user_data = getCurrUserInfoSerializer(user.employee).data
+    except Exception as error:
+        print(f"Error fetching user data: {error}")
+
+    return Response(user_data,status=status.HTTP_200_OK)
+
 
 @csrf_exempt
 @permission_classes([IsHoD])

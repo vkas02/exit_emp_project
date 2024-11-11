@@ -13,6 +13,7 @@ urlpatterns = [
     # path('',views.index,name='index'),
     path('dashboard', views.dashboard, name='dashboard'),
     path('logout', views.logout, name='logout'),
+    path('user',views.get_curr_user,name='get_current_user'),
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('employee/submit_feedback/', views.handle_feedback_submission, name='submit_feedback'),
     path('hod/update_task/', views.update_task_status, name='update_task_status'),

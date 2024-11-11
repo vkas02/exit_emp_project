@@ -75,3 +75,11 @@ class FeedbackAnswersSerializer(serializers.ModelSerializer):
     class Meta:
         model=FeedbackAnswers
         fields='__all__'
+
+
+class getCurrUserInfoSerializer(serializers.ModelSerializer):
+    department_name=serializers.CharField(source='department.name')
+    username=serializers.CharField(source='user.username')
+    class Meta:
+        model=Employee
+        fields=['name','username','department_name','role']
