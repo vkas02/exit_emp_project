@@ -120,7 +120,11 @@ def get_curr_user(request):
     except Exception as error:
         print(f"Error fetching user data: {error}")
 
-    return Response(user_data,status=status.HTTP_200_OK)
+    response_data={
+        'user_data':user_data
+    }
+
+    return Response(response_data,status=status.HTTP_200_OK)
 
 
 @csrf_exempt
