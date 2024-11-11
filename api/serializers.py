@@ -84,3 +84,11 @@ class getCurrUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model=Employee
         fields=['name','username','department_name','role','id']
+
+
+class feedbackResponseSerializer(serializers.ModelSerializer):
+    question_text=serializers.CharField(source='question.question_text',read_only=True)
+
+    class Meta:
+        model=FeedbackAnswers
+        fields=['question_text','selected_choice']

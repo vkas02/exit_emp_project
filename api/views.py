@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Employee, EmployeeTask, FeedbackQuestions, FeedbackAnswers, Department
 from .serializers import EmployeeSerializer, FeedbackQuestionsSerializer, EmployeeTaskSerializer, TaskSerializer, \
-    EmployeeTaskSerializerN, FeedbackAnswersSerializer, getCurrUserInfoSerializer
+    EmployeeTaskSerializerN, FeedbackAnswersSerializer, getCurrUserInfoSerializer, feedbackResponseSerializer
 from .utlis import notify_hr_of_completion
 from rest_framework.decorators import permission_classes, api_view
 from django.db.models import Q, Count, Case, When, F, FloatField, Value
@@ -322,6 +322,10 @@ def employee_tasklist_view(request,employee_id):
 
     employee = get_object_or_404(Employee, id=employee_id)
     tasks = EmployeeTask.objects.filter(employee=employee)
+    feedback=FeedbackAnswers.objects.filter(employee=employee_id)
+
+    feedback_data=feedbackResponseSerializer(feedback,many=True).data
+
     if tasks.exists():
         tasks_data = EmployeeTaskSerializerN(tasks, many=True).data
     else:
@@ -333,6 +337,7 @@ def employee_tasklist_view(request,employee_id):
             'department': employee.department.name,
         },
         'tasks': tasks_data,
+        'feedback_data':feedback_data
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
