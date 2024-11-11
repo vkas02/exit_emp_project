@@ -85,6 +85,16 @@ def handle_employee_role(request, user):
 @api_view(['GET','POST'])
 @permission_classes([IsEmployee])
 def handle_feedback_submission(request):
+    employee= request.user
+    id=employee.id-1
+    print(id)
+    existing_feedback=FeedbackAnswers.objects.filter(employee=id)
+
+    if existing_feedback.exists():
+        return Response(
+            {"detail":"Feedback has been submitted already"},status=status.HTTP_200_OK
+        )
+
     serializer=FeedbackAnswersSerializer(data=request.data,many=True)
     if serializer.is_valid():
         serializer.save();
