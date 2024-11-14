@@ -244,15 +244,14 @@ def handle_hr_role(request):
 
 @csrf_exempt
 @permission_classes([IsHR])
+@api_view(['POST'])
 def handle_upload_data(request):
     try:
         excel_file = request.FILES.get('excel_file')
-
         if not excel_file:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
 
         excel_file.seek(0)
-
         df=pd.read_excel(excel_file,engine='openpyxl')
         required_columns = ['userID','first_name','last_name', 'email', 'department_name', 'password']
 
@@ -287,6 +286,7 @@ def handle_upload_data(request):
             continue
 
         if User.objects.filter(username=username).exists():
+            print('user already exists')
             error_count+=1
             continue
         try:
